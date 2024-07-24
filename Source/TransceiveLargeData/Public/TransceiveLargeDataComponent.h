@@ -22,6 +22,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SendDataToServer(TArray<uint8> Data);
 
+	UFUNCTION(BlueprintCallable)
+	void SendDataMulticast(TArray<uint8> Data);
+
 	// Blueprint delegates
 public:
 	UPROPERTY(BlueprintAssignable)
@@ -32,19 +35,27 @@ private:
 	UFUNCTION(Server, Reliable)
 	void ReceiveChunk_Server(const TArray<uint8>& Chunk, bool bLastChunk);
 
-	UFUNCTION(Client, Reliable)
-	void SendReceivedAck_Client();
+	UFUNCTION(NetMulticast, Reliable)
+	void ReceiveChunk_Multicast(const TArray<uint8>& Chunk, bool bLastChunk);
 
 	// private functions
 private:
-	void SendoutAChunk();
+	void EnqueueToSendQueueAsChunks(const TArray<uint8>& Data);
+	bool SendoutAChunk();
+	void ReceiveChunk(const TArray<uint8>& Chunk, bool bLastChunk);
+	bool HaveSomethingToSend() const;
 
 	// private fields
 private:
 	TArray<uint8>         ReceivedBuffer;
 	TQueue<TArray<uint8>> SendQueue;
+	bool                  bSending = false;
 #pragma endregion
 
 public:
 	UTransceiveLargeDataComponent();
+
+	virtual void
+	    TickComponent(float DeltaSeconds, enum ELevelTick TickType,
+	                  FActorComponentTickFunction* ThisTickFunction) override;
 };

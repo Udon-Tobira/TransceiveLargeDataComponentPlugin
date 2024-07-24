@@ -3,10 +3,39 @@
 #include "TransceiveLargeDataComponent.h"
 
 void UTransceiveLargeDataComponent::SendDataToServer(TArray<uint8> Data) {
-	// TODO: Allow SendDataToServer to be called again while sending.
+	// Divide data into chunks and enqueue them to the SendQueue
+	EnqueueToSendQueueAsChunks(Data);
+
+	// set bSending flag true
+	bSending = true;
+}
+
+void UTransceiveLargeDataComponent::SendDataMulticast(TArray<uint8> Data) {
+	// Divide data into chunks and enqueue them to the SendQueue
+	EnqueueToSendQueueAsChunks(Data);
+
+	// set bSending flag true
+	bSending = true;
+}
+
+void UTransceiveLargeDataComponent::ReceiveChunk_Server_Implementation(
+    const TArray<uint8>& Chunk, bool bLastChunk) {
+	ReceiveChunk(Chunk, bLastChunk);
+}
+
+void UTransceiveLargeDataComponent::ReceiveChunk_Multicast_Implementation(
+    const TArray<uint8>& Chunk, bool bLastChunk) {
+	ReceiveChunk(Chunk, bLastChunk);
+}
+
+void UTransceiveLargeDataComponent::EnqueueToSendQueueAsChunks(
+    const TArray<uint8>& Data) {
+	// TODO: Allow EnqueueToSendQueueAsChunks to be called
+	// again while send queue is not empty.
 	checkf(SendQueue.IsEmpty(),
-	       TEXT("Calling SendDataToServer again while sending "
-	            "is currently not supported."));
+	       TEXT("Calling " __FUNCTION__ " again "
+	                                    "while send queue is not empty "
+	                                    "is currently not supported."));
 
 	// constant: max chunk size
 	constexpr auto MaxChunkLength = 60 * 1024; // 60KB per Chunk
@@ -17,12 +46,6 @@ void UTransceiveLargeDataComponent::SendDataToServer(TArray<uint8> Data) {
 	// calculate number of enqueued chunks
 	// means Ceil((double)DataLength / (double)MaxChunkLength)
 	const auto& NumChunks = (DataLength + MaxChunkLength - 1) / MaxChunkLength;
-
-	// if there is no chunk to send
-	if (0 == NumChunks) {
-		// send empty chunk to server as last chunk
-		ReceiveChunk_Server({}, true);
-	}
 
 	// divide data into small chunks and enqueue them into SendQueue.
 	for (auto ChunkIndex = decltype(NumChunks){0}; ChunkIndex < NumChunks;
@@ -47,16 +70,33 @@ void UTransceiveLargeDataComponent::SendDataToServer(TArray<uint8> Data) {
 		// enqueue this chunk
 		SendQueue.Enqueue(Chunk);
 	}
-
-	// send out a chunk on SendQueue
-	SendoutAChunk();
 }
 
-void UTransceiveLargeDataComponent::ReceiveChunk_Server_Implementation(
-    const TArray<uint8>& Chunk, bool bLastChunk) {
-	// send ack to client
-	SendReceivedAck_Client();
+bool UTransceiveLargeDataComponent::SendoutAChunk() {
+	// dequeue a chunk from SendQueue
+	TArray<uint8> Chunk;
+	// if SendQueue is empty, you're trying to send empty array (not abnormal)
+	SendQueue.Dequeue(Chunk);
 
+	// if SendQueue is empty, this is last chunk
+	const auto& bLastChunk = SendQueue.IsEmpty();
+
+	// if I'm a server
+	if (GetNetMode() <= ENetMode::NM_ListenServer) {
+		// send chunk to all clients
+		ReceiveChunk_Multicast(Chunk, bLastChunk);
+	}
+	// if I'm a client
+	else {
+		// send chunk to a server
+		ReceiveChunk_Server(Chunk, bLastChunk);
+	}
+
+	return bLastChunk;
+}
+
+void UTransceiveLargeDataComponent::ReceiveChunk(const TArray<uint8>& Chunk,
+                                                 bool bLastChunk) {
 	// append received chunk to internal buffer
 	ReceivedBuffer.Append(Chunk);
 
@@ -73,28 +113,8 @@ void UTransceiveLargeDataComponent::ReceiveChunk_Server_Implementation(
 	}
 }
 
-void UTransceiveLargeDataComponent::SendReceivedAck_Client_Implementation() {
-	// If there is data to send
-	if (!SendQueue.IsEmpty()) {
-		SendoutAChunk();
-	}
-	// If there is no more data to send
-	else {
-		// do nothing and return
-		return;
-	}
-}
-
-void UTransceiveLargeDataComponent::SendoutAChunk() {
-	// dequeue a chunk from SendQueue
-	TArray<uint8> Chunk;
-	verify(SendQueue.Dequeue(Chunk));
-
-	// if SendQueue is empty, this is last chunk
-	const auto& bLastChunk = SendQueue.IsEmpty();
-
-	// send chunk to server
-	ReceiveChunk_Server(Chunk, bLastChunk);
+bool UTransceiveLargeDataComponent::HaveSomethingToSend() const {
+	return !SendQueue.IsEmpty();
 }
 
 // Sets default values for this component's properties
@@ -106,4 +126,28 @@ UTransceiveLargeDataComponent::UTransceiveLargeDataComponent() {
 
 	// turn on replication
 	SetIsReplicatedByDefault(true);
+}
+
+void UTransceiveLargeDataComponent::TickComponent(
+    float DeltaSeconds, ELevelTick TickType,
+    FActorComponentTickFunction* ThisTickFunction) {
+	// call TickComponent on super class
+	Super::TickComponent(DeltaSeconds, TickType, ThisTickFunction);
+
+	// if not in sending status
+	if (!bSending) {
+		// do nothing and finish
+		return;
+	}
+
+	// TODO: control data send frequency
+
+	// send out a chunk
+	const auto& bLastChunk = SendoutAChunk();
+
+	// if this is a last chunk
+	if (bLastChunk) {
+		// set bSending status false
+		bSending = false;
+	}
 }
