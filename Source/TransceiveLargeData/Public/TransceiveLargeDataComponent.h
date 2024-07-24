@@ -11,7 +11,7 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FEventReceivedDataDelegate,
                                             const TArray<uint8>&, Data);
 
-UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
+UCLASS(meta = (BlueprintSpawnableComponent))
 class TRANSCEIVELARGEDATA_API UTransceiveLargeDataComponent
     : public UActorComponent {
 	GENERATED_BODY()
