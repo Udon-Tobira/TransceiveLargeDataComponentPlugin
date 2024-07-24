@@ -4,8 +4,9 @@
 
 void UTransceiveLargeDataComponent::SendDataToServer(TArray<uint8> Data) {
 	// TODO: Allow SendDataToServer to be called again while sending.
-	checkf(SendQueue.Empty(), "Calling SendDataToServer again while "
-	                          "sending is currently not supported.");
+	checkf(SendQueue.IsEmpty(),
+	       TEXT("Calling SendDataToServer again while sending "
+	            "is currently not supported."));
 
 	// constant: max chunk size
 	constexpr auto MaxChunkLength = 60 * 1024; // 60KB per Chunk
