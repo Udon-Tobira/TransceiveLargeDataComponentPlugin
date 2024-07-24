@@ -4,6 +4,7 @@
 
 #include "Components/ActorComponent.h"
 #include "CoreMinimal.h"
+#include "TransceiveLargeDataDirection.h"
 
 #include "TransceiveLargeDataComponent.generated.h"
 
@@ -20,10 +21,8 @@ class TRANSCEIVELARGEDATA_API UTransceiveLargeDataComponent
 	// Blueprint functions
 public:
 	UFUNCTION(BlueprintCallable)
-	void SendDataToServer(TArray<uint8> Data);
-
-	UFUNCTION(BlueprintCallable)
-	void SendDataMulticast(TArray<uint8> Data);
+	void SendData(TArray<uint8>                 Data,
+	              ETransceiveLargeDataDirection TransceiveDirection);
 
 	// Blueprint delegates
 public:
@@ -34,6 +33,9 @@ public:
 private:
 	UFUNCTION(Server, Reliable)
 	void ReceiveChunk_Server(const TArray<uint8>& Chunk, bool bLastChunk);
+
+	UFUNCTION(Client, Reliable)
+	void ReceiveChunk_Client(const TArray<uint8>& Chunk, bool bLastChunk);
 
 	UFUNCTION(NetMulticast, Reliable)
 	void ReceiveChunk_Multicast(const TArray<uint8>& Chunk, bool bLastChunk);
@@ -47,9 +49,10 @@ private:
 
 	// private fields
 private:
-	TArray<uint8>         ReceivedBuffer;
-	TQueue<TArray<uint8>> SendQueue;
-	bool                  bSending = false;
+	TArray<uint8>                 ReceivedBuffer;
+	TQueue<TArray<uint8>>         SendQueue;
+	bool                          bSending = false;
+	ETransceiveLargeDataDirection Direction;
 #pragma endregion
 
 public:

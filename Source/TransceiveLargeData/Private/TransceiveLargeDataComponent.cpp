@@ -2,23 +2,24 @@
 
 #include "TransceiveLargeDataComponent.h"
 
-void UTransceiveLargeDataComponent::SendDataToServer(TArray<uint8> Data) {
+void UTransceiveLargeDataComponent::SendData(
+    TArray<uint8> Data, ETransceiveLargeDataDirection TransceiveDirection) {
 	// Divide data into chunks and enqueue them to the SendQueue
 	EnqueueToSendQueueAsChunks(Data);
 
 	// set bSending flag true
 	bSending = true;
-}
 
-void UTransceiveLargeDataComponent::SendDataMulticast(TArray<uint8> Data) {
-	// Divide data into chunks and enqueue them to the SendQueue
-	EnqueueToSendQueueAsChunks(Data);
-
-	// set bSending flag true
-	bSending = true;
+	// set the direction of transceiving
+	Direction = TransceiveDirection;
 }
 
 void UTransceiveLargeDataComponent::ReceiveChunk_Server_Implementation(
+    const TArray<uint8>& Chunk, bool bLastChunk) {
+	ReceiveChunk(Chunk, bLastChunk);
+}
+
+void UTransceiveLargeDataComponent::ReceiveChunk_Client_Implementation(
     const TArray<uint8>& Chunk, bool bLastChunk) {
 	ReceiveChunk(Chunk, bLastChunk);
 }
@@ -81,15 +82,29 @@ bool UTransceiveLargeDataComponent::SendoutAChunk() {
 	// if SendQueue is empty, this is last chunk
 	const auto& bLastChunk = SendQueue.IsEmpty();
 
-	// if I'm a server
-	if (GetNetMode() <= ENetMode::NM_ListenServer) {
-		// send chunk to all clients
-		ReceiveChunk_Multicast(Chunk, bLastChunk);
-	}
-	// if I'm a client
-	else {
+	switch (Direction) {
+	// sending to server
+	case ETransceiveLargeDataDirection::Server:
 		// send chunk to a server
 		ReceiveChunk_Server(Chunk, bLastChunk);
+		break;
+
+	// sending to client
+	case ETransceiveLargeDataDirection::Client:
+		// send chunk to a Owning Client
+		ReceiveChunk_Client(Chunk, bLastChunk);
+		break;
+
+	// sending to all clients
+	case ETransceiveLargeDataDirection::Multicast:
+		// send chunk to all clients
+		ReceiveChunk_Multicast(Chunk, bLastChunk);
+		break;
+
+	// otherwise
+	default:
+		// You never come here.
+		checkf(false, TEXT("It is a non-existent Direction."));
 	}
 
 	return bLastChunk;
