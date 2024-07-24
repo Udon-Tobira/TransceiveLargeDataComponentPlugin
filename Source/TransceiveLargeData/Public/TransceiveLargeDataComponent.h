@@ -17,14 +17,17 @@ class TRANSCEIVELARGEDATA_API UTransceiveLargeDataComponent
 	GENERATED_BODY()
 
 #pragma region Network Features
+	// Blueprint functions
 public:
 	UFUNCTION(BlueprintCallable)
 	void SendDataToServer(TArray<uint8> Data);
 
+	// Blueprint delegates
 public:
 	UPROPERTY(BlueprintAssignable)
 	FEventReceivedDataDelegate EventReceivedDataDelegate;
 
+	// private RPC functions
 private:
 	UFUNCTION(Server, Reliable)
 	void ReceiveChunk_Server(const TArray<uint8>& Chunk, bool bLastChunk);
@@ -32,9 +35,11 @@ private:
 	UFUNCTION(Client, Reliable)
 	void SendReceivedAck_Client();
 
+	// private functions
 private:
 	void SendoutAChunk();
 
+	// private fields
 private:
 	TArray<uint8>         ReceivedBuffer;
 	TQueue<TArray<uint8>> SendQueue;
