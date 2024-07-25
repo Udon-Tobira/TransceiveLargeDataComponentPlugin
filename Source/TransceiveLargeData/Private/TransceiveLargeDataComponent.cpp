@@ -2,6 +2,9 @@
 
 #include "TransceiveLargeDataComponent.h"
 
+#include "Engine/ActorChannel.h"
+#include "LogTransceiveLargeDataComponent.h"
+
 void UTransceiveLargeDataComponent::SendData(
     TArray<uint8> Data, ETransceiveLargeDataDirection TransceiveDirection) {
 	// Divide data into chunks and enqueue them to the SendQueue
@@ -155,13 +158,75 @@ void UTransceiveLargeDataComponent::TickComponent(
 		return;
 	}
 
-	// TODO: control data send frequency
+	// get owner
+	const auto& Owner = GetOwner();
 
-	// send out a chunk
-	const auto& bLastChunk = SendoutAChunk();
+	// if there is no Owner
+	if (nullptr == Owner) {
+		// warn to log
+		UE_LOG(LogTransceiveLargeDataComponent, Warning,
+		       TEXT("There is data that is about to be sent, but this "
+		            "TranseceiveLargeDataComponent has no Owner. Sending data is "
+		            "pending."));
 
-	// if this is a last chunk
-	if (bLastChunk) {
+		// finish (pending sending)
+		return;
+	}
+
+	// get Connection
+	const auto& Connection = Owner->GetNetConnection();
+
+	// if there is no Connection
+	if (nullptr == Connection) {
+		// warn to log
+		UE_LOG(LogTransceiveLargeDataComponent, Warning,
+		       TEXT("There is data that is about to be sent, but this "
+		            "TranseceiveLargeDataComponent has no Connection (but has an "
+		            "Owner). Sending data is "
+		            "pending."));
+
+		// finish (pending sending)
+		return;
+	}
+
+	// get Channel
+	const auto& Channel = Connection->FindActorChannelRef(Owner);
+
+	// if there is no Channel
+	if (nullptr == Channel) {
+		// warn to log
+		UE_LOG(
+		    LogTransceiveLargeDataComponent, Warning,
+		    TEXT("There is data that is about to be sent, but this "
+		         "TranseceiveLargeDataComponent has no Actor Channel (but has an "
+		         "Owner and Connection). Sending data is "
+		         "pending."));
+
+		// finish (pending sending)
+		return;
+	}
+
+	// get reference of number of out reliable bunches
+	const auto& NumOutReliableBunches = Channel->NumOutRec;
+
+	// max number of reliable bunches I limit
+	// smaller of NumOutReliableBunches + 10 and RELIABLE_BUFFER*0.1
+	const auto& NumOutReliableBunchesMax = FMath::Min(
+	    NumOutReliableBunches + 10,
+	    static_cast<decltype(NumOutReliableBunches)>(
+	        static_cast<decltype(NumOutReliableBunches)>(RELIABLE_BUFFER) * 0.1));
+
+	// flag whether last chunk was sent or not
+	bool bLastChunkSent = false;
+
+	// SendoutAChunk until limit is reached
+	while (!bLastChunkSent && NumOutReliableBunches < NumOutReliableBunchesMax) {
+		// send out a chunk, and update bLastChunkSet value
+		bLastChunkSent = SendoutAChunk();
+	}
+
+	// if last chunk sent
+	if (bLastChunkSent) {
 		// set bSending status false
 		bSending = false;
 	}
