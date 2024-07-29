@@ -158,56 +158,65 @@ void UTransceiveLargeDataComponent::TickComponent(
 		return;
 	}
 
-	// get owner
-	const auto& Owner = GetOwner();
+	if (nullptr == ActorChannelCache) {
+		if (nullptr == ConnectionCache) {
+			if (nullptr == OwnerCache) {
+				// get owner
+				OwnerCache = GetOwner();
 
-	// if there is no Owner
-	if (nullptr == Owner) {
-		// warn to log
-		UE_LOG(LogTransceiveLargeDataComponent, Warning,
-		       TEXT("There is data that is about to be sent, but this "
-		            "TranseceiveLargeDataComponent has no Owner. Sending data is "
-		            "pending."));
+				// if there is no Owner
+				if (nullptr == OwnerCache) {
+					// warn to log
+					UE_LOG(
+					    LogTransceiveLargeDataComponent, Warning,
+					    TEXT(
+					        "There is data that is about to be sent, but this "
+					        "TranseceiveLargeDataComponent has no Owner. Sending data is "
+					        "pending."));
 
-		// finish (pending sending)
-		return;
-	}
+					// finish (pending sending)
+					return;
+				}
+			}
 
-	// get Connection
-	const auto& Connection = Owner->GetNetConnection();
+			// get Connection
+			ConnectionCache = OwnerCache->GetNetConnection();
 
-	// if there is no Connection
-	if (nullptr == Connection) {
-		// warn to log
-		UE_LOG(LogTransceiveLargeDataComponent, Warning,
-		       TEXT("There is data that is about to be sent, but this "
-		            "TranseceiveLargeDataComponent has no Connection (but has an "
-		            "Owner). Sending data is "
-		            "pending."));
+			// if there is no Connection
+			if (nullptr == ConnectionCache) {
+				// warn to log
+				UE_LOG(
+				    LogTransceiveLargeDataComponent, Warning,
+				    TEXT("There is data that is about to be sent, but this "
+				         "TranseceiveLargeDataComponent has no Connection (but has an "
+				         "Owner). Sending data is "
+				         "pending."));
 
-		// finish (pending sending)
-		return;
-	}
+				// finish (pending sending)
+				return;
+			}
+		}
 
-	// get Channel
-	const auto& Channel = Connection->FindActorChannelRef(Owner);
+		// get Channel
+		ActorChannelCache = ConnectionCache->FindActorChannelRef(OwnerCache);
 
-	// if there is no Channel
-	if (nullptr == Channel) {
-		// warn to log
-		UE_LOG(
-		    LogTransceiveLargeDataComponent, Warning,
-		    TEXT("There is data that is about to be sent, but this "
-		         "TranseceiveLargeDataComponent has no Actor Channel (but has an "
-		         "Owner and Connection). Sending data is "
-		         "pending."));
+		// if there is no Channel
+		if (nullptr == ActorChannelCache) {
+			// warn to log
+			UE_LOG(
+			    LogTransceiveLargeDataComponent, Warning,
+			    TEXT("There is data that is about to be sent, but this "
+			         "TranseceiveLargeDataComponent has no Actor Channel (but has an "
+			         "Owner and Connection). Sending data is "
+			         "pending."));
 
-		// finish (pending sending)
-		return;
+			// finish (pending sending)
+			return;
+		}
 	}
 
 	// get reference of number of out reliable bunches
-	const auto& NumOutReliableBunches = Channel->NumOutRec;
+	const auto& NumOutReliableBunches = ActorChannelCache->NumOutRec;
 
 	// max number of reliable bunches I limit
 	// smaller of NumOutReliableBunches + 10 and RELIABLE_BUFFER*0.1

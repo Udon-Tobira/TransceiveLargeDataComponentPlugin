@@ -53,6 +53,17 @@ private:
 	TQueue<TArray<uint8>>         SendQueue;
 	bool                          bSending = false;
 	ETransceiveLargeDataDirection Direction;
+
+	// cache
+private:
+	// A pointer to const would work, but since unreal does not have const, it
+	// cannot have it either.
+	AActor* OwnerCache = nullptr;
+	// A pointer to const would work, but since unreal does not have const, it
+	// cannot have it either.
+	UNetConnection*      ConnectionCache   = nullptr;
+	const UActorChannel* ActorChannelCache = nullptr;
+
 #pragma endregion
 
 public:
