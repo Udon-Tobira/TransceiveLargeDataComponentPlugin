@@ -158,8 +158,11 @@ void UTransceiveLargeDataComponent::TickComponent(
 		return;
 	}
 
+	// if there is no actor channel cache
 	if (nullptr == ActorChannelCache) {
+		// if there is no connection cache
 		if (nullptr == ConnectionCache) {
+			// if there is no owner cache
 			if (nullptr == OwnerCache) {
 				// get owner
 				OwnerCache = GetOwner();
