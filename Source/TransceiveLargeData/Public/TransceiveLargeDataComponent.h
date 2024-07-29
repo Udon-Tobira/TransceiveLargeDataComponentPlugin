@@ -61,8 +61,9 @@ private:
 	AActor* OwnerCache = nullptr;
 	// A pointer to const would work, but since unreal does not have const, it
 	// cannot have it either.
-	UNetConnection*      ConnectionCache   = nullptr;
-	const UActorChannel* ActorChannelCache = nullptr;
+	UNetConnection*      ConnectionCache          = nullptr;
+	const UActorChannel* ActorChannelCache        = nullptr;
+	float                DeltaFromLastSentSeconds = 0.0f;
 
 #pragma endregion
 

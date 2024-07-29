@@ -42,7 +42,7 @@ void UTransceiveLargeDataComponent::EnqueueToSendQueueAsChunks(
 	                                    "is currently not supported."));
 
 	// constant: max chunk size
-	constexpr auto MaxChunkLength = 60 * 1024; // 60KB per Chunk
+	constexpr auto MaxChunkLength = 10 * 1024; // 10KB per Chunk
 
 	// get length of data
 	const auto& DataLength = Data.Num();
@@ -158,6 +158,16 @@ void UTransceiveLargeDataComponent::TickComponent(
 		return;
 	}
 
+	// update delta from last sent (seconds)
+	DeltaFromLastSentSeconds =
+	    FMath::Clamp(DeltaFromLastSentSeconds + DeltaSeconds, 0, 1.0 / 5.0);
+
+	// if more than 1/5 second has not elapsed since the last sending
+	if (DeltaFromLastSentSeconds < 1.0 / 5.0) {
+		// do nothing and finish
+		return;
+	}
+
 	// if there is no actor channel cache
 	if (nullptr == ActorChannelCache) {
 		// if there is no connection cache
@@ -222,19 +232,27 @@ void UTransceiveLargeDataComponent::TickComponent(
 	const auto& NumOutReliableBunches = ActorChannelCache->NumOutRec;
 
 	// max number of reliable bunches I limit
-	// smaller of NumOutReliableBunches + 10 and RELIABLE_BUFFER*0.1
-	const auto& NumOutReliableBunchesMax = FMath::Min(
-	    NumOutReliableBunches + 10,
-	    static_cast<decltype(NumOutReliableBunches)>(
-	        static_cast<decltype(NumOutReliableBunches)>(RELIABLE_BUFFER) * 0.1));
+	const auto& NumOutReliableBunchesMax = 1;
 
 	// flag whether last chunk was sent or not
 	bool bLastChunkSent = false;
+
+	// flag whether at least one chunk or not was sent or not
+	bool bSentAtLeastOneChunk = false;
 
 	// SendoutAChunk until limit is reached
 	while (!bLastChunkSent && NumOutReliableBunches < NumOutReliableBunchesMax) {
 		// send out a chunk, and update bLastChunkSet value
 		bLastChunkSent = SendoutAChunk();
+
+		// set that at least one chunk was sent
+		bSentAtLeastOneChunk = true;
+	}
+
+	// if at least one chunk was sent
+	if (bSentAtLeastOneChunk) {
+		// reset delta from last sent (seconds)
+		DeltaFromLastSentSeconds = 0;
 	}
 
 	// if last chunk sent
