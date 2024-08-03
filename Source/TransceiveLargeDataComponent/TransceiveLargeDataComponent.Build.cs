@@ -2,9 +2,9 @@
 
 using UnrealBuildTool;
 
-public class TransceiveLargeData : ModuleRules
+public class TransceiveLargeDataComponent : ModuleRules
 {
-	public TransceiveLargeData(ReadOnlyTargetRules Target) : base(Target)
+	public TransceiveLargeDataComponent(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 		

@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "Modules/ModuleManager.h"
 
-class FTransceiveLargeDataModule : public IModuleInterface
+class FTransceiveLargeDataComponentModule : public IModuleInterface
 {
 public:
 
