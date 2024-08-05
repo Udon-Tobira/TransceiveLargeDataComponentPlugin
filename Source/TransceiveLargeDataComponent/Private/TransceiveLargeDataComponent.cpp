@@ -228,7 +228,8 @@ void UTransceiveLargeDataComponent::TickComponent(
 	const auto& NumOutReliableBunches = ActorChannelCache->NumOutRec;
 
 	// max number of reliable bunches I limit
-	const int& NumOutReliableBunchesMax = RELIABLE_BUFFER * 0.5;
+	const int& NumOutReliableBunchesMax =
+	    static_cast<double>(RELIABLE_BUFFER) * 0.5;
 
 	// flag whether last chunk was sent or not
 	bool bLastChunkSent = false;

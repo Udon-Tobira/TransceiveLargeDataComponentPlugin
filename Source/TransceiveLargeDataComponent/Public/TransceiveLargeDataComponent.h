@@ -51,7 +51,8 @@ private:
 private:
 	TArray<uint8>                 ReceivedBuffer;
 	TQueue<TArray<uint8>>         SendQueue;
-	bool                          bSending = false;
+	uint32                        SendQueueNum = 0;
+	bool                          bSending     = false;
 	ETransceiveLargeDataDirection Direction;
 
 	// cache
