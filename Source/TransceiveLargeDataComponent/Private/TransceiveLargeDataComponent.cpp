@@ -5,6 +5,10 @@
 #include "Engine/ActorChannel.h"
 #include "LogTransceiveLargeDataComponent.h"
 
+#define LOG_TRANSCEIVELARGEDATACOMPONENT(Verbosity, Format, ...)               \
+	UE_LOG(LogTransceiveLargeDataComponent, Verbosity, Format##L" [%s]",         \
+	       ##__VA_ARGS__, *GetFullName())
+
 void UTransceiveLargeDataComponent::SendData(
     TArray<uint8> Data, ETransceiveLargeDataDirection TransceiveDirection) {
 	// Divide data into chunks and enqueue them to the SendQueue
@@ -69,7 +73,7 @@ void UTransceiveLargeDataComponent::EnqueueToSendQueueAsChunks(
 		    TArray<uint8>(&Data[ChunkBeginIndexOnData], ChunkLength);
 
 		// enqueue this chunk
-		SendQueue.Enqueue(Chunk);
+		SendQueue.Enqueue(Chunk), ++SendQueueNum;
 	}
 }
 
@@ -77,7 +81,7 @@ bool UTransceiveLargeDataComponent::SendoutAChunk() {
 	// dequeue a chunk from SendQueue
 	TArray<uint8> Chunk;
 	// if SendQueue is empty, you're trying to send empty array (not abnormal)
-	SendQueue.Dequeue(Chunk);
+	SendQueue.Dequeue(Chunk), --SendQueueNum;
 
 	// if SendQueue is empty, this is last chunk
 	const auto& bLastChunk = SendQueue.IsEmpty();
@@ -107,6 +111,11 @@ bool UTransceiveLargeDataComponent::SendoutAChunk() {
 		checkf(false, TEXT("It is a non-existent Direction."));
 	}
 
+	// log
+	LOG_TRANSCEIVELARGEDATACOMPONENT(
+	    Log, TEXT("Sendout a chunk. remaining queued chunk num: %u"),
+	    SendQueueNum);
+
 	return bLastChunk;
 }
 
@@ -114,6 +123,11 @@ void UTransceiveLargeDataComponent::ReceiveChunk(const TArray<uint8>& Chunk,
                                                  bool bLastChunk) {
 	// append received chunk to internal buffer
 	ReceivedBuffer.Append(Chunk);
+
+	// log
+	LOG_TRANSCEIVELARGEDATACOMPONENT(
+	    Log, TEXT("A chunk received. ChunkNum: %d, BufferNum: %d"), Chunk.Num(),
+	    ReceivedBuffer.Num());
 
 	// if this is last chunk
 	if (bLastChunk) {
