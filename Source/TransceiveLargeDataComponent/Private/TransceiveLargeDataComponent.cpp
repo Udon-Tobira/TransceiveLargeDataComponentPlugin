@@ -41,9 +41,6 @@ void UTransceiveLargeDataComponent::EnqueueToSendQueueAsChunks(
 	                                    "while send queue is not empty "
 	                                    "is currently not supported."));
 
-	// constant: max chunk size
-	constexpr auto MaxChunkLength = 10 * 1024; // 10KB per Chunk
-
 	// get length of data
 	const auto& DataLength = Data.Num();
 
@@ -231,7 +228,7 @@ void UTransceiveLargeDataComponent::TickComponent(
 	const auto& NumOutReliableBunches = ActorChannelCache->NumOutRec;
 
 	// max number of reliable bunches I limit
-	const auto& NumOutReliableBunchesMax = 1;
+	const int& NumOutReliableBunchesMax = RELIABLE_BUFFER * 0.5;
 
 	// flag whether last chunk was sent or not
 	bool bLastChunkSent = false;
@@ -240,7 +237,8 @@ void UTransceiveLargeDataComponent::TickComponent(
 	bool bSentAtLeastOneChunk = false;
 
 	// SendoutAChunk until limit is reached
-	while (!bLastChunkSent && NumOutReliableBunches < NumOutReliableBunchesMax) {
+	while (!bLastChunkSent && (NumOutReliableBunches + MaxChunkLength / 1000) <
+	                              NumOutReliableBunchesMax) {
 		// send out a chunk, and update bLastChunkSet value
 		bLastChunkSent = SendoutAChunk();
 

@@ -73,4 +73,8 @@ public:
 	virtual void
 	    TickComponent(float DeltaSeconds, enum ELevelTick TickType,
 	                  FActorComponentTickFunction* ThisTickFunction) override;
+
+	// constants
+private:
+	static constexpr auto MaxChunkLength = 60 * 1000; // 60 KB per Chunk
 };
