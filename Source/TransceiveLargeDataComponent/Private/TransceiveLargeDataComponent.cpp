@@ -5,10 +5,6 @@
 #include "Engine/ActorChannel.h"
 #include "LogTransceiveLargeDataComponent.h"
 
-#define LOG_TRANSCEIVELARGEDATACOMPONENT(Verbosity, Format, ...)               \
-	UE_LOG(LogTransceiveLargeDataComponent, Verbosity, Format L" [%s]",          \
-	       ##__VA_ARGS__, *GetFullName())
-
 void UTransceiveLargeDataComponent::SendData(
     TArray<uint8> Data, ETransceiveLargeDataDirection TransceiveDirection) {
 	// Divide data into chunks and enqueue them to the SendQueue
@@ -111,9 +107,9 @@ bool UTransceiveLargeDataComponent::SendoutAChunk() {
 	}
 
 	// log
-	LOG_TRANSCEIVELARGEDATACOMPONENT(
-	    Log, TEXT("Sendout a chunk. remaining queued chunk num: %u"),
-	    SendQueueNum);
+	UE_LOG(LogTransceiveLargeDataComponent, Log,
+	       TEXT("Sendout a chunk. remaining queued chunk num: %u [%s]"),
+	       SendQueueNum, *GetFullName());
 
 	return bLastChunk;
 }
@@ -124,9 +120,9 @@ void UTransceiveLargeDataComponent::ReceiveChunk(const TArray<uint8>& Chunk,
 	ReceivedBuffer.Append(Chunk);
 
 	// log
-	LOG_TRANSCEIVELARGEDATACOMPONENT(
-	    Log, TEXT("A chunk received. ChunkNum: %d, BufferNum: %d"), Chunk.Num(),
-	    ReceivedBuffer.Num());
+	UE_LOG(LogTransceiveLargeDataComponent, Log,
+	       TEXT("A chunk received. ChunkNum: %d, BufferNum: %d [%s]"),
+	       Chunk.Num(), ReceivedBuffer.Num(), *GetFullName());
 
 	// if this is last chunk
 	if (bLastChunk) {
@@ -191,11 +187,12 @@ void UTransceiveLargeDataComponent::TickComponent(
 				// if there is no Owner
 				if (nullptr == OwnerCache) {
 					// warn to log
-					LOG_TRANSCEIVELARGEDATACOMPONENT(
-					    Warning,
+					UE_LOG(
+					    LogTransceiveLargeDataComponent, Warning,
 					    TEXT("There is data that is about to be sent, but this "
 					         "TransceiveLargeDataComponent has no Owner. Sending data is "
-					         "pending."));
+					         "pending. [%s]"),
+					    *GetFullName());
 
 					// finish (pending sending)
 					return;
@@ -208,12 +205,13 @@ void UTransceiveLargeDataComponent::TickComponent(
 			// if there is no Connection
 			if (nullptr == ConnectionCache) {
 				// warn to log
-				LOG_TRANSCEIVELARGEDATACOMPONENT(
-				    Warning,
+				UE_LOG(
+				    LogTransceiveLargeDataComponent, Warning,
 				    TEXT("There is data that is about to be sent, but this "
 				         "TransceiveLargeDataComponent has no Connection (but has an "
 				         "Owner). Sending data is "
-				         "pending."));
+				         "pending. [%s]"),
+				    *GetFullName());
 
 				// finish (pending sending)
 				return;
@@ -226,12 +224,13 @@ void UTransceiveLargeDataComponent::TickComponent(
 		// if there is no Channel
 		if (nullptr == ActorChannelCache) {
 			// warn to log
-			LOG_TRANSCEIVELARGEDATACOMPONENT(
-			    Warning,
+			UE_LOG(
+			    LogTransceiveLargeDataComponent, Warning,
 			    TEXT("There is data that is about to be sent, but this "
 			         "TransceiveLargeDataComponent has no Actor Channel (but has an "
 			         "Owner and Connection). Sending data is "
-			         "pending."));
+			         "pending. [%s]"),
+			    *GetFullName());
 
 			// finish (pending sending)
 			return;
