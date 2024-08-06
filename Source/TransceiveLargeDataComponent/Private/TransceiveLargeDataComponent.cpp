@@ -191,8 +191,8 @@ void UTransceiveLargeDataComponent::TickComponent(
 				// if there is no Owner
 				if (nullptr == OwnerCache) {
 					// warn to log
-					UE_LOG(
-					    LogTransceiveLargeDataComponent, Warning,
+					LOG_TRANSCEIVELARGEDATACOMPONENT(
+					    Warning,
 					    TEXT("There is data that is about to be sent, but this "
 					         "TransceiveLargeDataComponent has no Owner. Sending data is "
 					         "pending."));
@@ -208,8 +208,8 @@ void UTransceiveLargeDataComponent::TickComponent(
 			// if there is no Connection
 			if (nullptr == ConnectionCache) {
 				// warn to log
-				UE_LOG(
-				    LogTransceiveLargeDataComponent, Warning,
+				LOG_TRANSCEIVELARGEDATACOMPONENT(
+				    Warning,
 				    TEXT("There is data that is about to be sent, but this "
 				         "TransceiveLargeDataComponent has no Connection (but has an "
 				         "Owner). Sending data is "
@@ -226,8 +226,8 @@ void UTransceiveLargeDataComponent::TickComponent(
 		// if there is no Channel
 		if (nullptr == ActorChannelCache) {
 			// warn to log
-			UE_LOG(
-			    LogTransceiveLargeDataComponent, Warning,
+			LOG_TRANSCEIVELARGEDATACOMPONENT(
+			    Warning,
 			    TEXT("There is data that is about to be sent, but this "
 			         "TransceiveLargeDataComponent has no Actor Channel (but has an "
 			         "Owner and Connection). Sending data is "
