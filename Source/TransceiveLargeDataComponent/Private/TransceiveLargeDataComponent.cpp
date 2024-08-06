@@ -138,7 +138,8 @@ void UTransceiveLargeDataComponent::ReceiveChunk(const TArray<uint8>& Chunk,
 		ReceivedBuffer = decltype(ReceivedBuffer){};
 
 		// Notify all recipients that you received all data
-		EventReceivedDataDelegate.Broadcast(ReceivedData);
+		OnReceivedDataDynamicDelegate.Broadcast(ReceivedData);
+		OnReceivedDataDelegate.Broadcast(ReceivedData);
 	}
 }
 

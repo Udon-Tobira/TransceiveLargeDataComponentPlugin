@@ -8,9 +8,12 @@
 
 #include "TransceiveLargeDataComponent.generated.h"
 
-// delegate called when a data is received
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FEventReceivedDataDelegate,
+// delegate for blueprint called when a data is received
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnReceivedDataDynamicDelegate,
                                             const TArray<uint8>&, Data);
+// delegate for C++ called when a data is received
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnReceivedDataDelegate,
+                                    const TArray<uint8>& Data);
 
 UCLASS(meta = (BlueprintSpawnableComponent))
 class TRANSCEIVELARGEDATACOMPONENT_API UTransceiveLargeDataComponent
@@ -27,7 +30,11 @@ public:
 	// Blueprint delegates
 public:
 	UPROPERTY(BlueprintAssignable)
-	FEventReceivedDataDelegate EventReceivedDataDelegate;
+	FOnReceivedDataDynamicDelegate OnReceivedDataDynamicDelegate;
+
+	// C++ delegate
+public:
+	FOnReceivedDataDelegate OnReceivedDataDelegate;
 
 	// private RPC functions
 private:
