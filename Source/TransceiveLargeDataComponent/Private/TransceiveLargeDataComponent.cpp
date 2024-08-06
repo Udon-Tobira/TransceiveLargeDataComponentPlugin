@@ -6,7 +6,7 @@
 #include "LogTransceiveLargeDataComponent.h"
 
 #define LOG_TRANSCEIVELARGEDATACOMPONENT(Verbosity, Format, ...)               \
-	UE_LOG(LogTransceiveLargeDataComponent, Verbosity, Format##L" [%s]",         \
+	UE_LOG(LogTransceiveLargeDataComponent, Verbosity, Format L" [%s]",          \
 	       ##__VA_ARGS__, *GetFullName())
 
 void UTransceiveLargeDataComponent::SendData(
@@ -40,10 +40,9 @@ void UTransceiveLargeDataComponent::EnqueueToSendQueueAsChunks(
     const TArray<uint8>& Data) {
 	// TODO: Allow EnqueueToSendQueueAsChunks to be called
 	// again while send queue is not empty.
-	checkf(SendQueue.IsEmpty(),
-	       TEXT("Calling " __FUNCTION__ " again "
-	                                    "while send queue is not empty "
-	                                    "is currently not supported."));
+	checkf(SendQueue.IsEmpty(), TEXT("Calling EnqueueToSendQueueAsChunks again "
+	                                 "while send queue is not empty "
+	                                 "is currently not supported."));
 
 	// get length of data
 	const auto& DataLength = Data.Num();
