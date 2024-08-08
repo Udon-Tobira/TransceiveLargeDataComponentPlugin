@@ -29,7 +29,7 @@ public:
 
 	// Blueprint delegates
 public:
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, meta = (DisplayName = "On Received Data"))
 	FOnReceivedDataDynamicDelegate OnReceivedDataDynamicDelegate;
 
 	// C++ delegate
