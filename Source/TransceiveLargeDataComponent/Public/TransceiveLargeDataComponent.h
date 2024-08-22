@@ -11,7 +11,7 @@
 // delegate for blueprint called when the entire data is received
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnReceivedDataDynamicDelegate,
                                             const TArray<uint8>&, Data);
-// delegate for C++ called when a data is received
+// delegate for C++ called when the entire data  data is received
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnReceivedDataDelegate,
                                     const TArray<uint8>& Data);
 
