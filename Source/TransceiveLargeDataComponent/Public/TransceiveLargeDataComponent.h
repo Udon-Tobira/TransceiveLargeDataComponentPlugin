@@ -8,7 +8,7 @@
 
 #include "TransceiveLargeDataComponent.generated.h"
 
-// delegate for blueprint called when a data is received
+// delegate for blueprint called when the entire data is received
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnReceivedDataDynamicDelegate,
                                             const TArray<uint8>&, Data);
 // delegate for C++ called when a data is received
