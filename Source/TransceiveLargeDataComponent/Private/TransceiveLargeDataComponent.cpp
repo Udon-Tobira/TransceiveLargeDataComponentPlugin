@@ -43,6 +43,12 @@ void UTransceiveLargeDataComponent::EnqueueToSendQueueAsChunks(
 	// get length of data
 	const auto& DataLength = Data.Num();
 
+	// set data length to send
+	TotalDataLengthToSend = DataLength;
+
+	// reset length of data which is already sent to 0
+	DataLengthAlreadySent = 0;
+
 	// calculate number of enqueued chunks
 	// means Ceil((double)DataLength / (double)MaxChunkLength)
 	const auto& NumChunks = (DataLength + MaxChunkLength - 1) / MaxChunkLength;
@@ -105,6 +111,15 @@ bool UTransceiveLargeDataComponent::SendoutAChunk() {
 		// You never come here.
 		checkf(false, TEXT("It is a non-existent Direction."));
 	}
+
+	// add length of this chunk to DataLengthAlreadySent
+	DataLengthAlreadySent += Chunk.Num();
+
+	// Notify all recipients that you received a chunk
+	OnSentAChunkDynamicDelegate.Broadcast(Chunk, DataLengthAlreadySent,
+	                                      TotalDataLengthToSend);
+	OnSentAChunkDelegate.Broadcast(Chunk, DataLengthAlreadySent,
+	                               TotalDataLengthToSend);
 
 	// log
 	UE_LOG(LogTransceiveLargeDataComponent, Log,

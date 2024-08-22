@@ -15,6 +15,17 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnReceivedDataDynamicDelegate,
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnReceivedDataDelegate,
                                     const TArray<uint8>& Data);
 
+// delegate for blueprint called when a chunk is sent
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnSentAChunkDynamicDelegate,
+                                               const TArray<uint8>&, Data,
+                                               int32, DataLengthAlreadySent,
+                                               int32, TotalDataLengthToSend);
+// delegate for C++ called when a chunk is sent
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnSentAChunkDelegate,
+                                       const TArray<uint8>& Data,
+                                       int32 DataLengthAlreadySent,
+                                       int32 TotalDataLengthToSend);
+
 UCLASS(meta = (BlueprintSpawnableComponent))
 class TRANSCEIVELARGEDATACOMPONENT_API UTransceiveLargeDataComponent
     : public UActorComponent {
@@ -31,10 +42,13 @@ public:
 public:
 	UPROPERTY(BlueprintAssignable, meta = (DisplayName = "On Received Data"))
 	FOnReceivedDataDynamicDelegate OnReceivedDataDynamicDelegate;
+	UPROPERTY(BlueprintAssignable, meta = (DisplayName = "On Sent A Chunk"))
+	FOnSentAChunkDynamicDelegate OnSentAChunkDynamicDelegate;
 
 	// C++ delegate
 public:
-	FOnReceivedDataDelegate OnReceivedDataDelegate;
+	FOnReceivedDataDelegate   OnReceivedDataDelegate;
+	FOnSentAChunkDelegate     OnSentAChunkDelegate;
 
 	// private RPC functions
 private:
@@ -61,6 +75,12 @@ private:
 	uint32                        SendQueueNum = 0;
 	bool                          bSending     = false;
 	ETransceiveLargeDataDirection Direction;
+
+	// Total data length that has been sent (or is being sent)
+	int32 TotalDataLengthToSend = 0;
+
+	// Length of data already sent �i<= TotalDataLengthToSend�j
+	int32 DataLengthAlreadySent = 0;
 
 	// cache
 private:
