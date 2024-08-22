@@ -19,17 +19,17 @@ void UTransceiveLargeDataComponent::SendData(
 
 void UTransceiveLargeDataComponent::ReceiveChunk_Server_Implementation(
     const TArray<uint8>& Chunk, bool bLastChunk) {
-	ReceiveChunk(Chunk, bLastChunk);
+	ReceiveAChunk(Chunk, bLastChunk);
 }
 
 void UTransceiveLargeDataComponent::ReceiveChunk_Client_Implementation(
     const TArray<uint8>& Chunk, bool bLastChunk) {
-	ReceiveChunk(Chunk, bLastChunk);
+	ReceiveAChunk(Chunk, bLastChunk);
 }
 
 void UTransceiveLargeDataComponent::ReceiveChunk_Multicast_Implementation(
     const TArray<uint8>& Chunk, bool bLastChunk) {
-	ReceiveChunk(Chunk, bLastChunk);
+	ReceiveAChunk(Chunk, bLastChunk);
 }
 
 void UTransceiveLargeDataComponent::EnqueueToSendQueueAsChunks(
@@ -114,8 +114,8 @@ bool UTransceiveLargeDataComponent::SendoutAChunk() {
 	return bLastChunk;
 }
 
-void UTransceiveLargeDataComponent::ReceiveChunk(const TArray<uint8>& Chunk,
-                                                 bool bLastChunk) {
+void UTransceiveLargeDataComponent::ReceiveAChunk(const TArray<uint8>& Chunk,
+                                                  bool bLastChunk) {
 	// append received chunk to internal buffer
 	ReceivedBuffer.Append(Chunk);
 

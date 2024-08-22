@@ -51,7 +51,7 @@ private:
 private:
 	void EnqueueToSendQueueAsChunks(const TArray<uint8>& Data);
 	bool SendoutAChunk();
-	void ReceiveChunk(const TArray<uint8>& Chunk, bool bLastChunk);
+	void ReceiveAChunk(const TArray<uint8>& Chunk, bool bLastChunk);
 	bool HaveSomethingToSend() const;
 
 	// private fields
