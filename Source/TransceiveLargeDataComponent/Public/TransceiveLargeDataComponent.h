@@ -35,7 +35,7 @@ class TRANSCEIVELARGEDATACOMPONENT_API UTransceiveLargeDataComponent
 	// Blueprint functions
 public:
 	UFUNCTION(BlueprintCallable)
-	void SendData(TArray<uint8>                 Data,
+	void SendData(const TArray<uint8>&          Data,
 	              ETransceiveLargeDataDirection TransceiveDirection);
 
 	// Blueprint delegates
