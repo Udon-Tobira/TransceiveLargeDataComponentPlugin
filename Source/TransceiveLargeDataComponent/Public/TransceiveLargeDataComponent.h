@@ -79,7 +79,7 @@ private:
 	// Total data length that has been sent (or is being sent)
 	int32 TotalDataLengthToSend = 0;
 
-	// Length of data already sent �i<= TotalDataLengthToSend�j
+	// Length of data already sent (<= TotalDataLengthToSend)
 	int32 DataLengthAlreadySent = 0;
 
 	// cache
