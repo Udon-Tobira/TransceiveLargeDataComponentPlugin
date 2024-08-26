@@ -6,7 +6,8 @@
 #include "LogTransceiveLargeDataComponent.h"
 
 void UTransceiveLargeDataComponent::SendData(
-    TArray<uint8> Data, ETransceiveLargeDataDirection TransceiveDirection) {
+    const TArray<uint8>&          Data,
+    ETransceiveLargeDataDirection TransceiveDirection) {
 	// Divide data into chunks and enqueue them to the SendQueue
 	EnqueueToSendQueueAsChunks(Data);
 
