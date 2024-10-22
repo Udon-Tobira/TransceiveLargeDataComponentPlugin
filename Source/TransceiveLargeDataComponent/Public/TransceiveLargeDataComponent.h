@@ -8,12 +8,20 @@
 
 #include "TransceiveLargeDataComponent.generated.h"
 
-// delegate for blueprint called when the entire data is received
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnReceivedDataDynamicDelegate,
-                                            const TArray<uint8>&, Data);
-// delegate for C++ called when the entire data is received
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnReceivedDataDelegate,
-                                    const TArray<uint8>& Data);
+// delegate for blueprint called at the beginning of sending data
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnBeginSendDataDynamicDelegate,
+                                             const TArray<uint8>&, Data,
+                                             ETransceiveLargeDataDirection,
+                                             TransceiveDirection);
+// delegate for C++ called at the beginning of sending data
+DECLARE_MULTICAST_DELEGATE_TwoParams(
+    FOnBeginSendDataDelegate, const TArray<uint8>& Data,
+    ETransceiveLargeDataDirection TransceiveDirection);
+
+// delegate for blueprint called when the entire data is sent
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEndSendDataDynamicDelegate);
+// delegate for C++ called when the entire data is sent
+DECLARE_MULTICAST_DELEGATE(FOnEndSendDataDelegate);
 
 // delegate for blueprint called when a chunk is sent
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnSentAChunkDynamicDelegate,
@@ -25,6 +33,13 @@ DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnSentAChunkDelegate,
                                        const TArray<uint8>& Data,
                                        int32 DataLengthAlreadySent,
                                        int32 TotalDataLengthToSend);
+
+// delegate for blueprint called when the entire data is received
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnReceivedDataDynamicDelegate,
+                                            const TArray<uint8>&, Data);
+// delegate for C++ called when the entire data is received
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnReceivedDataDelegate,
+                                    const TArray<uint8>& Data);
 
 UCLASS(meta = (BlueprintSpawnableComponent))
 class TRANSCEIVELARGEDATACOMPONENT_API UTransceiveLargeDataComponent
@@ -40,15 +55,23 @@ public:
 
 	// Blueprint delegates
 public:
-	UPROPERTY(BlueprintAssignable, meta = (DisplayName = "On Received Data"))
-	FOnReceivedDataDynamicDelegate OnReceivedDataDynamicDelegate;
+	UPROPERTY(BlueprintAssignable, meta = (DisplayName = "On Begin Send Data"))
+	FOnBeginSendDataDynamicDelegate OnBeginSendDataDynamicDelegate;
+	UPROPERTY(BlueprintAssignable, meta = (DisplayName = "On End Send Data"))
+	FOnEndSendDataDynamicDelegate OnEndSendDataDynamicDelegate;
 	UPROPERTY(BlueprintAssignable, meta = (DisplayName = "On Sent A Chunk"))
 	FOnSentAChunkDynamicDelegate OnSentAChunkDynamicDelegate;
 
+	UPROPERTY(BlueprintAssignable, meta = (DisplayName = "On Received Data"))
+	FOnReceivedDataDynamicDelegate OnReceivedDataDynamicDelegate;
+
 	// C++ delegate
 public:
-	FOnReceivedDataDelegate   OnReceivedDataDelegate;
-	FOnSentAChunkDelegate     OnSentAChunkDelegate;
+	FOnBeginSendDataDelegate OnBeginSendDataDelegate;
+	FOnEndSendDataDelegate   OnEndSendDataDelegate;
+	FOnSentAChunkDelegate    OnSentAChunkDelegate;
+
+	FOnReceivedDataDelegate OnReceivedDataDelegate;
 
 	// private RPC functions
 private:
@@ -64,7 +87,7 @@ private:
 	// private functions
 private:
 	void EnqueueToSendQueueAsChunks(const TArray<uint8>& Data);
-	bool SendoutAChunk();
+	bool SendAChunk();
 	void ReceiveAChunk(const TArray<uint8>& Chunk, bool bLastChunk);
 	bool HaveSomethingToSend() const;
 

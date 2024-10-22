@@ -16,6 +16,10 @@ void UTransceiveLargeDataComponent::SendData(
 
 	// set the direction of transceiving
 	Direction = TransceiveDirection;
+
+	// Notify all recipients that you began sending data
+	OnBeginSendDataDynamicDelegate.Broadcast(Data, TransceiveDirection);
+	OnBeginSendDataDelegate.Broadcast(Data, TransceiveDirection);
 }
 
 void UTransceiveLargeDataComponent::ReceiveChunk_Server_Implementation(
@@ -79,7 +83,7 @@ void UTransceiveLargeDataComponent::EnqueueToSendQueueAsChunks(
 	}
 }
 
-bool UTransceiveLargeDataComponent::SendoutAChunk() {
+bool UTransceiveLargeDataComponent::SendAChunk() {
 	// dequeue a chunk from SendQueue
 	TArray<uint8> Chunk;
 	// if SendQueue is empty, you're trying to send empty array (not abnormal)
@@ -116,7 +120,7 @@ bool UTransceiveLargeDataComponent::SendoutAChunk() {
 	// add length of this chunk to DataLengthAlreadySent
 	DataLengthAlreadySent += Chunk.Num();
 
-	// Notify all recipients that you received a chunk
+	// Notify all recipients that you sent a chunk
 	OnSentAChunkDynamicDelegate.Broadcast(Chunk, DataLengthAlreadySent,
 	                                      TotalDataLengthToSend);
 	OnSentAChunkDelegate.Broadcast(Chunk, DataLengthAlreadySent,
@@ -124,8 +128,19 @@ bool UTransceiveLargeDataComponent::SendoutAChunk() {
 
 	// log
 	UE_LOG(LogTransceiveLargeDataComponent, Log,
-	       TEXT("Sendout a chunk. remaining queued chunk num: %u [%s]"),
+	       TEXT("Sent a chunk. remaining queued chunk num: %u [%s]"),
 	       SendQueueNum, *GetFullName());
+
+	// if this is last chunk
+	if (bLastChunk) {
+		// log
+		UE_LOG(LogTransceiveLargeDataComponent, Log,
+		       TEXT("Sending completed. [%s]"), *GetFullName());
+
+		// Notify all recipients that you finished sending data
+		OnEndSendDataDynamicDelegate.Broadcast();
+		OnEndSendDataDelegate.Broadcast();
+	}
 
 	return bLastChunk;
 }
@@ -266,11 +281,11 @@ void UTransceiveLargeDataComponent::TickComponent(
 	// flag whether at least one chunk or not was sent or not
 	bool bSentAtLeastOneChunk = false;
 
-	// SendoutAChunk until limit is reached
+	// SendAChunk until limit is reached
 	while (!bLastChunkSent && (NumOutReliableBunches + MaxChunkLength / 1000) <
 	                              NumOutReliableBunchesMax) {
 		// send out a chunk, and update bLastChunkSet value
-		bLastChunkSent = SendoutAChunk();
+		bLastChunkSent = SendAChunk();
 
 		// set that at least one chunk was sent
 		bSentAtLeastOneChunk = true;
